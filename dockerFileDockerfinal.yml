@@ -1,0 +1,36 @@
+FROM jenkins/jenkins:jdk11
+
+USER root
+
+RUN apt-get install -y wget
+
+RUN wget --no-verbose -O /tmp/apache-maven-3.5.4-bin.tar.gz http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+
+RUN tar xzf /tmp/apache-maven-3.5.4-bin.tar.gz -C /opt/
+RUN ln -s /opt/apache-maven-3.5.4 /opt/maven
+RUN ln -s /opt/maven/bin/mvn /usr/local/bin
+RUN rm -f /tmp/apache-maven-3.5.4-bin.tar.gz 
+
+ENV MAVEN_HOME /opt/maven
+
+RUN chown -R jenkins:jenkins /opt/maven
+
+RUN apt-get clean
+
+RUN apt-get update && \
+apt-get -y install apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg2 \
+    software-properties-common && \
+curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
+add-apt-repository \
+    "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
+    $(lsb_release -cs) \
+    stable" && \
+apt-get update && \
+apt-get -y install docker-ce
+RUN apt-get install -y docker-ce
+RUN usermod -a -G docker jenkins
+
+USER jenkins
